@@ -29,7 +29,7 @@ class Activity(db.Model, SerializerMixin):
     campers = association_proxy("signups", "camper")
     
     # Add serialization rules
-    serialize_rules = ("-signups.activity",)
+    serialize_rules = ("-signups.activity","-signups.camper")
     
     def __repr__(self):
         return f'<Activity {self.id}: {self.name}>'
@@ -79,10 +79,11 @@ class Signup(db.Model, SerializerMixin):
     activity_id = db.Column(db.Integer, db.ForeignKey("activities.id"))
 
     # Add relationships
-    # camper = db.relationship("Camper", back_populates="signups")
-    # activity = db.relationship("Activity", back_populates="signups")
+    camper = db.relationship("Camper", back_populates="signups")
+    activity = db.relationship("Activity", back_populates="signups")
     
     # Add serialization rules
+    serialize_rules=("-activity.signups", "-camper.signups")
 
     # Add validation
     @validates("time")
