@@ -70,7 +70,7 @@ class Signups(Resource):
     def post(self):
         request_data = request.get_json()
         try:
-            new_signup = Signups(**request_data)
+            new_signup = Signup(**request_data)
         except: 
             abort(422, errors=["validation errors"])
         db.session.add(new_signup)

@@ -14,7 +14,7 @@ convention = {
 
 metadata = MetaData(naming_convention=convention)
 
-db = SQLAlchemy(metadata=metadata)
+db = SQLAlchemy(metadata=metadata, engine_options={'echo': True})
 
 
 class Activity(db.Model, SerializerMixin):
@@ -26,13 +26,10 @@ class Activity(db.Model, SerializerMixin):
 
     # Add relationship
     signups = db.relationship("Signup", back_populates="activity", cascade="delete")
-    campers = association_proxy("signups", "activities")
+    campers = association_proxy("signups", "camper")
     
     # Add serialization rules
-    serialize_rules = (
-        "-signup.activity",
-        "-signup.camper",
-    )
+    serialize_rules = ("-signups.activity",)
     
     def __repr__(self):
         return f'<Activity {self.id}: {self.name}>'
@@ -46,14 +43,14 @@ class Camper(db.Model, SerializerMixin):
     age = db.Column(db.Integer)
 
     # Add relationship
-    activities = db.relationship("Activity", back_populates="camper", cascade="delete")
-    signups = association_proxy("activities", "camper")
+    signups = db.relationship("Signup", back_populates="camper", cascade="delete")
+    activities = association_proxy("signups", "activity")
+    # activities = db.relationship("Activity", back_populates="camper", cascade="delete")
+    # signups = association_proxy("activities", "camper")
+    
     
     # Add serialization rules
-    serialize_rules = (
-        "-signup.activity",
-        "-signup.camper",
-    )
+    serialize_rules = ("-signups.camper",)
 
     # Add validation
     @validates("name")
@@ -64,8 +61,8 @@ class Camper(db.Model, SerializerMixin):
     
     @validates("age")
     def validate_age(self, key, age):
-        if not 8 < age < 18:
-            raise ValueError("Age must be between 8 and 18")
+        if not 8 <= age <= 18:
+            raise ValueError("Age must be between 8 and 18 inclusive")
         return age
     
     def __repr__(self):
@@ -82,19 +79,17 @@ class Signup(db.Model, SerializerMixin):
     activity_id = db.Column(db.Integer, db.ForeignKey("activities.id"))
 
     # Add relationships
-    camper = db.relationship("Camper", back_populates="signups")
-    activity = db.relationship("Activity", back_populates="signups")
+    # camper = db.relationship("Camper", back_populates="signups")
+    # activity = db.relationship("Activity", back_populates="signups")
     
     # Add serialization rules
-    serialize_rules = (
-        "-signup.activity",
-        "-signup.camper",
-    )
+
     # Add validation
     @validates("time")
     def validate_time(self, key, time):
-        if not 0 < time < 23:
-            raise ValueError("Time must be between 0 and 23")
+        if not 0 <= time <= 23:
+            raise ValueError("Time must be between 0 and 23 inclusive")
+        return time
     
     def __repr__(self):
         return f'<Signup {self.id}>'
